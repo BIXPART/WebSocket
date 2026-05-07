@@ -5,6 +5,7 @@ import ListContats from "@/components/ListContats";
 import Footer from "@/layout/Footer";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import UsuariosIniciais from "@/hooks/UsuariosIniciais";
 
 import styles from "./css/Home.module.css";
 
@@ -19,33 +20,9 @@ export default function Home() {
     if (localStorage.getItem("token")) {
       setHasToken(true);
     }
-    
-    localStorage.setItem(
-      "usuarios",
-      JSON.stringify([
-        {
-          id: 1,
-          nome: "Maximiliano",
-          email: "[EMAIL_ADDRESS]",
-          senha: "123",
-          contatos: [2, 3],
-        },
-        {
-          id: 2,
-          nome: "Maria",
-          email: "[EMAIL_ADDRESS]",
-          senha: "123",
-          contatos: [1],
-        },
-        {
-          id: 3,
-          nome: "Pedro",
-          email: "[EMAIL_ADDRESS]",
-          senha: "123",
-          contatos: [1],
-        },
-      ]),
-    );
+    if(!localStorage.getItem("usuarios")){
+      UsuariosIniciais();
+    }
   }, []);
 
   if (!mounted) return null;

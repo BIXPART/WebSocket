@@ -1,8 +1,15 @@
 "use client";
 
 import styles from "./css/Footer.module.css";
+import UsuariosIniciais from "@/hooks/UsuariosIniciais";
 
 export default function Footer() {
+
+  function limparLocalStorage(){
+    localStorage.clear();
+    UsuariosIniciais();
+  }
+
   return (
     <div className={styles.footerWrapper}>
       <footer className={styles.footer}>
