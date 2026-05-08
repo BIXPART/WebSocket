@@ -6,6 +6,7 @@ import Footer from "@/layout/Footer";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import UsuariosIniciais from "@/hooks/UsuariosIniciais";
+import Chat from "@/components/Chat";
 
 import styles from "./css/Home.module.css";
 
@@ -34,7 +35,7 @@ export default function Home() {
         <main className={styles.chatMain}>
           <ListContats />
           <div className={styles.chatPlaceholder}>
-            <p>Selecione um contato para iniciar uma conversa</p>
+            <Chat />
           </div>
         </main>
         <Footer />
