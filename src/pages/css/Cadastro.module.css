@@ -1,10 +1,11 @@
 .page {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: #0f172a;
   color: #f8fafc;
   font-family: system-ui, -apple-system, sans-serif;
+  overflow: hidden;
 }
 
 .main {
@@ -14,7 +15,8 @@
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  margin-bottom: 4rem;
+  padding-bottom: 4rem;
+  overflow-y: auto;
 }
 
 .formContainer {

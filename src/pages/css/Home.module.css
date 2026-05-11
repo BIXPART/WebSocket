@@ -1,10 +1,11 @@
 .page {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: #0f172a;
   color: #f8fafc;
   font-family: system-ui, -apple-system, sans-serif;
+  overflow: hidden;
 }
 
 .main {
@@ -14,9 +15,25 @@
   justify-content: center;
   align-items: center;
   padding: 2rem;
+  padding-bottom: 4rem; /* For the fixed footer */
   gap: 1.5rem;
   text-align: center;
-  margin-bottom: 4rem; /* For the fixed footer */
+  overflow-y: auto;
+}
+
+.logo {
+  width: 400px;
+  max-width: 80%;
+  height: auto;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 0 20px rgba(96, 165, 250, 0.5));
+  animation: float 3.5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
 }
 
 .title {
@@ -63,8 +80,9 @@
   display: flex;
   flex-direction: row;
   width: 100%;
-  margin-bottom: 4rem; /* For the fixed footer */
+  padding-bottom: 4rem; /* For the fixed footer */
   background-color: #0b141a;
+  overflow: hidden;
 }
 
 .chatPlaceholder {

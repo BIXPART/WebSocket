@@ -17,12 +17,10 @@ export default function Chat(){
     };
 
     useEffect(() => {
-        async function get(){
-            const msgs = getConversations(meuId, idContato);
-            setMensagens(msgs);
-        }
-        get();
-    }, [meuId, idContato, getConversations]);
+        const msgs = getConversations(meuId, idContato);
+        setMensagens(msgs);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [meuId, idContato]);
 
     useEffect(() => {
         scrollToBottom();

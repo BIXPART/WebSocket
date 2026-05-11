@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import UsuariosIniciais from "@/hooks/UsuariosIniciais";
 import Chat from "@/components/Chat";
+import whatszap2 from '../assets/whatszap2.png'
 
 import styles from "./css/Home.module.css";
 
@@ -46,7 +47,7 @@ export default function Home() {
       <div className={styles.page}>
         <Headler />
         <main className={styles.main}>
-          <h1 className={styles.title}>WebChat</h1>
+          <img src={whatszap2.src} alt="Whatszap Logo" className={styles.logo} />
 
           <h2 className={styles.subtitle}>Já tem uma conta? entre</h2>
           <button className={styles.button} onClick={() => router.push("/Login")}>Login</button>

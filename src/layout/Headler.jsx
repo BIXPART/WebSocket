@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import whatszap2 from '../assets/whatszap2.png';
 
 import styles from "./css/Headler.module.css";
 import { useEffect, useState } from "react";
@@ -28,7 +29,9 @@ export default function Headler() {
   if (hasToken) {
     return (
       <header className={styles.header}>
-        <button className={`${styles.button} ${styles.homeButton}`} onClick={() => router.push("/")}>Home</button>
+        <button className={styles.homeButtonWrapper} onClick={() => router.push("/")}>
+          <img src={whatszap2.src} alt="Home" className={styles.homeLogo} />
+        </button>
         <button className={`${styles.button} ${styles.logoutButton}`} onClick={() => {
             localStorage.removeItem("token");
             setHasToken(false);
@@ -39,7 +42,9 @@ export default function Headler() {
   } else {
     return (
       <header className={styles.header}>
-        <button className={`${styles.button} ${styles.homeButton}`} onClick={() => router.push("/")}>Home</button>
+        <button className={styles.homeButtonWrapper} onClick={() => router.push("/")}>
+          <img src={whatszap2.src} alt="Home" className={styles.homeLogo} />
+        </button>
         <button className={styles.button} onClick={() => router.push("/Login")}>Login</button>
         <button className={styles.button} onClick={() => router.push("/Cadastro")}>Register</button>
       </header>

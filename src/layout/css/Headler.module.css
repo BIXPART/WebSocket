@@ -15,8 +15,26 @@
   width: 100%;
 }
 
-.homeButton {
+.homeButtonWrapper {
   margin-right: auto;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.homeButtonWrapper:hover {
+  transform: scale(1.05);
+}
+
+.homeLogo {
+  height: 45px;
+  width: auto;
+  filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.3));
 }
 
 .button {
