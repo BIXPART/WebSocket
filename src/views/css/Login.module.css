@@ -2,7 +2,10 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #0f172a;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+    #0a0a0f;
   color: #f8fafc;
   font-family: system-ui, -apple-system, sans-serif;
   overflow: hidden;
@@ -20,17 +23,29 @@
 }
 
 .formContainer {
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
   padding: 3rem;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--cyber-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 212, 255, 0.05);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
   max-width: 400px;
+  position: relative;
+}
+
+.formContainer::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 25%;
+  right: 25%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+  border-radius: 2px;
 }
 
 .title {
@@ -38,7 +53,10 @@
   font-weight: 700;
   text-align: center;
   margin-bottom: 1rem;
-  color: #e2e8f0;
+  background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
 }
 
 .inputGroup {
@@ -67,20 +85,24 @@
 }
 
 .button {
-  background: #3b82f6;
-  color: white;
+  background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+  color: #0a0a0f;
   border: none;
   padding: 0.8rem;
   border-radius: 8px;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.25);
 }
 
 .button:hover {
-  background: #2563eb;
+  box-shadow: 0 6px 25px rgba(0, 212, 255, 0.45);
+  transform: translateY(-2px);
 }
 
 .togglePassword {

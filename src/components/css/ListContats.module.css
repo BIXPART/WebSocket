@@ -1,20 +1,35 @@
 .container {
   width: 100%;
   max-width: 400px;
-  background-color: #111b21;
+  background: linear-gradient(180deg, #0d1520 0%, #11181f 100%);
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid var(--cyber-border);
+  position: relative;
+}
+
+.container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+  opacity: 0.2;
 }
 
 .header {
-  background-color: #202c33;
+  background: linear-gradient(135deg, #11181f 0%, #0d1520 100%);
   padding: 1rem 1.5rem;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #e9edef;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--neon-blue);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--cyber-border);
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
 }
 
 .list {
@@ -56,6 +71,12 @@
   background-color: #202c33;
 }
 
+.selected,
+.selected:hover {
+  background-color: #2a3942;
+  border-left: 3px solid #00a884;
+}
+
 .avatar {
   width: 48px;
   height: 48px;
@@ -72,11 +93,11 @@
 }
 
 /* Add different colors for avatars based on nth-child or just use CSS variables if needed. We'll just stick to a uniform color or use inline styles for random colors. */
-.avatar.color1 { background-color: #3b82f6; }
-.avatar.color2 { background-color: #10b981; }
-.avatar.color3 { background-color: #f59e0b; }
-.avatar.color4 { background-color: #ef4444; }
-.avatar.color5 { background-color: #8b5cf6; }
+.avatar.color1 { background: linear-gradient(135deg, #3b82f6, #6366f1); box-shadow: 0 0 8px rgba(59, 130, 246, 0.3); }
+.avatar.color2 { background: linear-gradient(135deg, #10b981, #22c55e); box-shadow: 0 0 8px rgba(16, 185, 129, 0.3); }
+.avatar.color3 { background: linear-gradient(135deg, #f59e0b, #f97316); box-shadow: 0 0 8px rgba(245, 158, 11, 0.3); }
+.avatar.color4 { background: linear-gradient(135deg, #ef4444, #ec4899); box-shadow: 0 0 8px rgba(239, 68, 68, 0.3); }
+.avatar.color5 { background: linear-gradient(135deg, #8b5cf6, #a855f7); box-shadow: 0 0 8px rgba(139, 92, 246, 0.3); }
 
 .contactInfo {
   display: flex;

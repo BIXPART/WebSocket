@@ -7,14 +7,15 @@
 }
 
 .footer {
-  padding: 1.5rem;
-  background: rgba(15, 23, 42, 0.8);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.5rem;
+  background: rgba(10, 10, 15, 0.9);
+  border-top: 1px solid var(--cyber-border);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #94a3b8;
-  font-size: 0.9rem;
+  gap: 1rem;
+  color: #64748b;
+  font-size: 0.85rem;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -23,4 +24,33 @@
   margin: 0;
   font-weight: 400;
   letter-spacing: 0.5px;
+}
+
+.clearButton {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clearButton:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fef2f2;
+}
+
+.toast {
+  color: #22c55e;
+  font-size: 0.8rem;
+  animation: fadeInOut 2s ease;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
 }
