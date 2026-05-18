@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import styles from "./css/ListContats.module.css";
 
-export default function ListContats({ onSelectContact, selectedId }) {
+export default function ListContats({ onSelectContact, selectedId, onlineUsers }) {
   const [contatos, setContatos] = useState([]);
   const [mounted, setMounted] = useState(false);
 
@@ -14,7 +14,10 @@ export default function ListContats({ onSelectContact, selectedId }) {
     if (tokenStr && usuariosStr) {
       const token = JSON.parse(tokenStr);
       const usuarios = JSON.parse(usuariosStr);
-      setContatos(usuarios.filter((c) => String(c.id) !== String(token.id)));
+      const contatosIds = (token.contatos || []).map(String);
+      setContatos(
+        usuarios.filter((c) => contatosIds.includes(String(c.id)))
+      );
     }
   }, []);
 
@@ -22,6 +25,8 @@ export default function ListContats({ onSelectContact, selectedId }) {
     const colors = [styles.color1, styles.color2, styles.color3, styles.color4, styles.color5];
     return colors[Number(id) % colors.length];
   };
+
+  const isOnline = (id) => onlineUsers?.some((u) => String(u.id) === String(id));
 
   if (!mounted) return null;
 
@@ -37,11 +42,14 @@ export default function ListContats({ onSelectContact, selectedId }) {
             >
               <div className={`${styles.avatar} ${getColorClass(contato.id)}`}>
                 {contato.nome.charAt(0).toUpperCase()}
+                <span className={`${styles.statusDot} ${isOnline(contato.id) ? styles.statusOnline : styles.statusOffline}`} />
               </div>
               <div className={styles.contactInfo}>
                 <div className={styles.topLine}>
                   <span className={styles.contactName}>{contato.nome}</span>
-                  <span className={styles.time}>agora</span>
+                  <span className={`${styles.statusBadge} ${isOnline(contato.id) ? styles.statusBadgeOnline : styles.statusBadgeOffline}`}>
+                    {isOnline(contato.id) ? "online" : "offline"}
+                  </span>
                 </div>
                 <div className={styles.bottomLine}>
                   <span className={styles.contactStatus}>Toque para conversar</span>
@@ -50,6 +58,9 @@ export default function ListContats({ onSelectContact, selectedId }) {
             </button>
           </li>
         ))}
+        {contatos.length === 0 && (
+          <li className={styles.emptyState}>Nenhum contato disponível</li>
+        )}
       </ul>
     </div>
   );

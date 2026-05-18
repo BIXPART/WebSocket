@@ -90,6 +90,51 @@
   font-weight: 600;
   margin-right: 1rem;
   flex-shrink: 0;
+  position: relative;
+}
+
+.statusDot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #0d1520;
+}
+
+.statusOnline {
+  background-color: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+.statusOffline {
+  background-color: #6b7280;
+}
+
+.statusBadge {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.statusBadgeOnline {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.statusBadgeOffline {
+  color: #8696a0;
+  background: rgba(134, 150, 160, 0.1);
+}
+
+.emptyState {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #8696a0;
+  font-size: 0.9rem;
+  list-style: none;
 }
 
 /* Add different colors for avatars based on nth-child or just use CSS variables if needed. We'll just stick to a uniform color or use inline styles for random colors. */

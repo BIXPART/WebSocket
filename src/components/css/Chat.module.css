@@ -176,5 +176,40 @@
   width: 20px;
   height: 20px;
   fill: currentColor;
-  margin-left: 2px; /* slight visual offset */
+  margin-left: 2px;
+}
+
+.typingIndicator {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--neon-blue);
+  font-style: italic;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.messageText {
+  display: block;
+}
+
+.messageMeta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+}
+
+.messageTime {
+  font-size: 0.65rem;
+  color: rgba(233, 237, 239, 0.6);
+}
+
+.deliveredIcon {
+  font-size: 0.6rem;
+  color: var(--neon-blue);
 }

@@ -58,14 +58,22 @@ export default function Home() {
           <ListContats
             onSelectContact={handleSelectContact}
             selectedId={contactId}
+            onlineUsers={ws.onlineUsers}
           />
           <div className={styles.chatPlaceholder}>
+            {!ws.connected && (
+              <div className={styles.reconnectBanner}>
+                Reconectando ao servidor...
+              </div>
+            )}
             {contactId ? (
               <Chat
                 userId={user.id}
                 contactId={contactId}
                 wsMessages={ws.messages}
                 sendMessage={ws.sendMessage}
+                typingUsers={ws.typingUsers}
+                sendTyping={ws.sendTyping}
               />
             ) : (
               <div className={styles.noChat}>

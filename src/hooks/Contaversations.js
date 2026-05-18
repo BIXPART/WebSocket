@@ -1,25 +1,23 @@
 export default function Conversations() {
 
     function getChatId(id1, id2) {
-        return [id1, id2].sort((a, b) => a - b).join("_");
+        return [id1, id2].sort((a, b) => String(a).localeCompare(String(b))).join("_");
     }
 
-    function salvarMensagem(idRemetente, idDestinatario, texto) {
+    function salvarMensagem(idRemetente, idDestinatario, texto, data, id) {
         const chatId = getChatId(idRemetente, idDestinatario);
 
-        // 1. Pega o que já existe ou cria um objeto vazio
         const todasConversas = JSON.parse(localStorage.getItem("conversas") || "{}");
 
-        // 2. Se a conversa específica não existir, cria o array dela
         if (!todasConversas[chatId]) {
             todasConversas[chatId] = [];
         }
 
-        // 3. Adiciona a nova mensagem
         todasConversas[chatId].push({
-            enviadoPor: idRemetente,
+            id: id || Date.now() + "_" + Math.random(),
+            enviadoPor: String(idRemetente),
             texto: texto,
-            data: new Date().toISOString()
+            data: data || new Date().toISOString(),
         });
 
         localStorage.setItem("conversas", JSON.stringify(todasConversas));

@@ -98,6 +98,7 @@
   color: #8696a0;
   font-size: 1.2rem;
   border-left: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
 }
 
 .noChat {
@@ -149,5 +150,25 @@
 .wsStatus {
   font-size: 0.85rem;
   color: #8696a0;
+}
+
+.reconnectBanner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
 }
 

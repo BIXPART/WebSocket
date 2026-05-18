@@ -4,6 +4,8 @@ const PORT = 3030;
 const wss = new WebSocketServer({ port: PORT });
 
 const users = new Map();
+const pendentesPorUser = new Map();
+let msgCounter = 0;
 
 wss.on("listening", () => {
   console.log(`\u{1F7E2} WebSocket server running on ws://localhost:${PORT}`);
@@ -36,7 +38,9 @@ wss.on("connection", (ws) => {
         const { to, text } = msg;
         const payload = {
           type: "message",
+          id: ++msgCounter,
           from: userId,
+          to,
           text,
           data: new Date().toISOString(),
         };
@@ -53,6 +57,19 @@ wss.on("connection", (ws) => {
 
         if (userId) {
           ws.send(JSON.stringify({ ...payload, delivered: true }));
+        }
+        return;
+      }
+
+      if (type === "typing") {
+        const { to, typing } = msg;
+        const targetWs = users.get(to);
+        if (targetWs && targetWs.readyState === 1) {
+          targetWs.send(JSON.stringify({
+            type: "typing",
+            from: userId,
+            typing,
+          }));
         }
         return;
       }
@@ -80,8 +97,6 @@ wss.on("connection", (ws) => {
 
   ws.on("error", () => {});
 });
-
-const pendentesPorUser = new Map();
 
 function broadcastUserList() {
   const list = Array.from(users.keys()).map((id) => ({ id, online: true }));
