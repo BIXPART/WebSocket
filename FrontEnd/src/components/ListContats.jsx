@@ -1,25 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import styles from "./css/ListContats.module.css";
 
-export default function ListContats({ onSelectContact, selectedId, onlineUsers }) {
-  const [contatos, setContatos] = useState([]);
+export default function ListContats({ onSelectContact, selectedId, onlineUsers, onAddContact, user }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const tokenStr = localStorage.getItem("token");
-    const usuariosStr = localStorage.getItem("usuarios");
-    if (tokenStr && usuariosStr) {
-      const token = JSON.parse(tokenStr);
-      const usuarios = JSON.parse(usuariosStr);
-      const contatosIds = (token.contatos || []).map(String);
-      setContatos(
-        usuarios.filter((c) => contatosIds.includes(String(c.id)))
-      );
-    }
   }, []);
+
+  const contatos = useMemo(() => {
+    if (!user) return [];
+    const usuariosStr = localStorage.getItem("usuarios");
+    if (!usuariosStr) return [];
+    const usuarios = JSON.parse(usuariosStr);
+    const contatosIds = (user.contatos || []).map(String);
+    return usuarios.filter((c) => contatosIds.includes(String(c.id)));
+  }, [user]);
 
   const getColorClass = (id) => {
     const colors = [styles.color1, styles.color2, styles.color3, styles.color4, styles.color5];
@@ -32,7 +30,12 @@ export default function ListContats({ onSelectContact, selectedId, onlineUsers }
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>Conversas</div>
+      <div className={styles.header}>
+        <span>Conversas</span>
+        <button className={styles.addButton} onClick={onAddContact} title="Adicionar contato">
+          +
+        </button>
+      </div>
       <ul className={styles.list}>
         {contatos.map((contato) => (
           <li key={contato.id}>

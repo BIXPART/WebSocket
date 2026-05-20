@@ -6,11 +6,13 @@ const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3030";
 const MAX_RECONNECT_DELAY = 30000;
 const INITIAL_RECONNECT_DELAY = 1000;
 
-export default function useWebSocket(userId) {
+export default function useWebSocket(userId, userName) {
   const ws = useRef(null);
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [globalMessages, setGlobalMessages] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [typingUsers, setTypingUsers] = useState({});
   const listeners = useRef([]);
   const reconnectTimeout = useRef(null);
@@ -25,7 +27,7 @@ export default function useWebSocket(userId) {
 
     socket.onopen = () => {
       reconnectAttempt.current = 0;
-      socket.send(JSON.stringify({ type: "auth", id: userId }));
+      socket.send(JSON.stringify({ type: "auth", id: userId, name: userName }));
     };
 
     socket.onmessage = (event) => {
@@ -33,6 +35,7 @@ export default function useWebSocket(userId) {
 
       if (data.type === "auth_ok") {
         setConnected(true);
+        socket.send(JSON.stringify({ type: "list_all_users" }));
         return;
       }
 
@@ -42,8 +45,18 @@ export default function useWebSocket(userId) {
         return;
       }
 
+      if (data.type === "global_message") {
+        setGlobalMessages((prev) => [...prev, data]);
+        return;
+      }
+
       if (data.type === "user_list") {
         setOnlineUsers(data.users);
+        return;
+      }
+
+      if (data.type === "all_users") {
+        setAllUsers(data.users);
         return;
       }
 
@@ -69,7 +82,7 @@ export default function useWebSocket(userId) {
     };
 
     socket.onerror = () => {};
-  }, [userId]);
+  }, [userId, userName]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -92,9 +105,21 @@ export default function useWebSocket(userId) {
     }
   }, []);
 
+  const sendGlobalMessage = useCallback((text) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "global_message", text }));
+    }
+  }, []);
+
   const sendTyping = useCallback((to, typing) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({ type: "typing", to, typing }));
+    }
+  }, []);
+
+  const requestAllUsers = useCallback(() => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "list_all_users" }));
     }
   }, []);
 
@@ -105,5 +130,5 @@ export default function useWebSocket(userId) {
     };
   }, []);
 
-  return { connected, messages, onlineUsers, typingUsers, sendMessage, sendTyping, onMessage };
+  return { connected, messages, globalMessages, onlineUsers, allUsers, typingUsers, sendMessage, sendGlobalMessage, sendTyping, requestAllUsers, onMessage };
 }

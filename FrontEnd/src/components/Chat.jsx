@@ -9,7 +9,7 @@ function formatTime(isoString) {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function Chat({ userId, contactId, wsMessages, sendMessage, typingUsers, sendTyping }) {
+export default function Chat({ userId, contactId, contactName, wsMessages, sendMessage, typingUsers, sendTyping }) {
   const [mensagens, setMensagens] = useState([]);
   const [inputMensagem, setInputMensagem] = useState("");
   const { getConversations, salvarMensagem } = Conversations();
@@ -34,7 +34,8 @@ export default function Chat({ userId, contactId, wsMessages, sendMessage, typin
     if (!userId || !contactId) return;
     const relevant = wsMessages.filter(
       (m) =>
-        String(m.from) === String(contactId) || String(m.to) === String(contactId)
+        String(m.from) === String(contactId) &&
+        String(m.from) !== String(userId)
     );
     if (relevant.length === 0) return;
 
@@ -54,12 +55,39 @@ export default function Chat({ userId, contactId, wsMessages, sendMessage, typin
             delivered: m.delivered,
           };
           merged.push(mapped);
-          salvarMensagem(mapped.enviadoPor, contactId, mapped.texto, mapped.data, mapped.id);
+          salvarMensagem(String(m.from), String(m.to), mapped.texto, mapped.data, mapped.id);
           changed = true;
         }
       });
 
       return changed ? merged : prev;
+    });
+  }, [wsMessages, userId, contactId]);
+
+  useEffect(() => {
+    if (!userId || !contactId) return;
+    const delivered = wsMessages.filter(
+      (m) =>
+        String(m.from) === String(userId) &&
+        String(m.to) === String(contactId) &&
+        m.delivered
+    );
+    if (delivered.length === 0) return;
+
+    setMensagens((prev) => {
+      let changed = false;
+      const updated = prev.map((m) => {
+        if (
+          !m.delivered &&
+          String(m.enviadoPor) === String(userId) &&
+          delivered.some((d) => d.text === m.texto)
+        ) {
+          changed = true;
+          return { ...m, delivered: true };
+        }
+        return m;
+      });
+      return changed ? updated : prev;
     });
   }, [wsMessages, userId, contactId]);
 
@@ -105,7 +133,7 @@ export default function Chat({ userId, contactId, wsMessages, sendMessage, typin
           </div>
           <div>
             <span className={styles.contactName}>
-              {contactId ? `Contato ${contactId}` : "Selecione um contato"}
+              {contactName || (contactId ? `Contato ${contactId}` : "Selecione um contato")}
             </span>
             {isTyping && <span className={styles.typingIndicator}>digitando...</span>}
           </div>

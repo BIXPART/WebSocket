@@ -13,12 +13,21 @@ export default function Conversations() {
             todasConversas[chatId] = [];
         }
 
-        todasConversas[chatId].push({
-            id: id || Date.now() + "_" + Math.random(),
+        const msgId = id || Date.now() + "_" + Math.random();
+        const existingIndex = todasConversas[chatId].findIndex((m) => String(m.id) === String(msgId));
+
+        const entry = {
+            id: msgId,
             enviadoPor: String(idRemetente),
             texto: texto,
             data: data || new Date().toISOString(),
-        });
+        };
+
+        if (existingIndex !== -1) {
+            todasConversas[chatId][existingIndex] = entry;
+        } else {
+            todasConversas[chatId].push(entry);
+        }
 
         localStorage.setItem("conversas", JSON.stringify(todasConversas));
     }
@@ -26,7 +35,14 @@ export default function Conversations() {
     function getConversations(idRemetente, idDestinatario) {
         const chatId = getChatId(idRemetente, idDestinatario);
         const todasConversas = JSON.parse(localStorage.getItem("conversas") || "{}");
-        return todasConversas[chatId] || [];
+        const msgs = todasConversas[chatId] || [];
+
+        const seen = new Set();
+        return msgs.filter((m) => {
+            if (seen.has(String(m.id))) return false;
+            seen.add(String(m.id));
+            return true;
+        });
     }
 
     return {
