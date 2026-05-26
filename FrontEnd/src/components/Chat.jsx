@@ -45,8 +45,9 @@ export default function Chat({ userId, contactId, contactName, wsMessages, sendM
       const merged = [...prev];
 
       relevant.forEach((m) => {
-        if (m.id && !existingIds.has(m.id)) {
+        if (m.id && !existingIds.has(m.id) && !processedIds.current.has(m.id)) {
           existingIds.add(m.id);
+          processedIds.current.add(m.id);
           const mapped = {
             id: m.id,
             enviadoPor: String(m.from),

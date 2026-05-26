@@ -1,0 +1,11 @@
+WebSocket server running on ws://localhost:3030
+User 2 (Maria) connected
+User 1 (Maximiliano) connected
+User 2 disconnected
+User 1 disconnected
+User 2 (Maria) connected
+User 1 (Maximiliano) connected
+User 1 disconnected
+User 2 disconnected
+User 1 (Maximiliano) connected
+User 2 (Maria) connected

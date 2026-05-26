@@ -118,9 +118,11 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     if (userId) {
-      console.log(`User ${userId} disconnected`);
-      users.delete(userId);
-      broadcastUserList();
+      if (users.get(userId) === ws) {
+        console.log(`User ${userId} disconnected`);
+        users.delete(userId);
+        broadcastUserList();
+      }
     }
   });
 

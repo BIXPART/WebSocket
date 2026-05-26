@@ -22,6 +22,11 @@ export default function useWebSocket(userId, userName) {
   const connect = useCallback(() => {
     if (!userId || !mountedRef.current) return;
 
+    if (ws.current) {
+      ws.current.onclose = null;
+      ws.current.close();
+    }
+
     const socket = new WebSocket(WS_URL);
     ws.current = socket;
 
@@ -70,6 +75,7 @@ export default function useWebSocket(userId, userName) {
     };
 
     socket.onclose = () => {
+      if (socket !== ws.current) return;
       setConnected(false);
       if (mountedRef.current) {
         const delay = Math.min(
