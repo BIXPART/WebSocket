@@ -277,6 +277,77 @@
   color: #ef4444;
 }
 
+.searchContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  transition: border-color 0.2s;
+}
+
+.searchContainer:focus-within {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.15);
+}
+
+.searchIcon {
+  color: #8696a0;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e9edef;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.searchInput::placeholder {
+  color: #8696a0;
+}
+
+.toast {
+  position: fixed;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  background: #1a2a3a;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(59, 130, 246, 0.1);
+  animation: toastIn 0.3s ease;
+  pointer-events: none;
+}
+
+.toastSuccess {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(34, 197, 94, 0.15);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 .modalBody {
   padding: 1rem 1.5rem;
   overflow-y: auto;
@@ -458,5 +529,250 @@
   background: rgba(59, 130, 246, 0.2);
   border-color: #60a5fa;
   box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+.roomJoinBtn {
+  background: transparent;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #22c55e;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.roomJoinBtn:hover {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.roomJoinBtnActive {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.roomJoinBtnActive:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.roomChatContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #11181f;
+}
+
+.roomModeToggle {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.modeBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8696a0;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modeBtn:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #e9edef;
+}
+
+.modeBtnActive {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
+
+.roomMembers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.roomMemberItem {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  cursor: default;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.roomMemberSelected {
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  cursor: pointer;
+}
+
+.roomMemberDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.roomMemberName {
+  font-size: 0.75rem;
+}
+
+.roomMemberCheck {
+  color: #60a5fa;
+  font-size: 0.7rem;
+  margin-left: 0.15rem;
+}
+
+.messagesArea {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.messageRowRoom {
+  display: flex;
+  flex-direction: column;
+  max-width: 80%;
+}
+
+.messageRowRoom.messageRowSent {
+  align-self: flex-end;
+}
+
+.messageRowRoom.messageRowReceived {
+  align-self: flex-start;
+}
+
+.senderInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.senderName {
+  font-size: 0.75rem;
+  color: #60a5fa;
+  font-weight: 500;
+}
+
+.messageBubbleRoom {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  word-wrap: break-word;
+}
+
+.messageBubbleRoom.messageSent {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  border-bottom-right-radius: 2px;
+}
+
+.messageBubbleRoom.messageReceived {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e9edef;
+  border-bottom-left-radius: 2px;
+}
+
+.messageText {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.messageTime {
+  font-size: 0.65rem;
+  color: #8696a0;
+}
+
+.inputArea {
+  display: flex;
+  padding: 0.75rem 1rem;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.inputField {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  color: #e9edef;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.inputField:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.sendButton {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.sendButton:hover {
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+.sendButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sendIcon {
+  width: 18px;
+  height: 18px;
+  fill: white;
+}
+
+.toastError {
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(239, 68, 68, 0.15);
+}
+
+.chatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chatHeaderInfo {
+  display: flex;
+  flex-direction: column;
 }
 

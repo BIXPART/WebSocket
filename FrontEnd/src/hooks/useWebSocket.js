@@ -14,8 +14,12 @@ export default function useWebSocket(userId, userName) {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [typingUsers, setTypingUsers] = useState({});
-  const [lastContactAdded, setLastContactAdded] = useState(null);
   const [contactAddedCount, setContactAddedCount] = useState(0);
+  const contactAddedQueue = useRef([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [roomMessages, setRoomMessages] = useState({});
+  const [roomUsers, setRoomUsers] = useState({});
   const listeners = useRef([]);
   const reconnectTimeout = useRef(null);
   const reconnectAttempt = useRef(0);
@@ -68,12 +72,18 @@ export default function useWebSocket(userId, userName) {
       }
 
       if (data.type === "contact_added") {
-        setLastContactAdded(data);
+        contactAddedQueue.current.push(data);
         setContactAddedCount((c) => c + 1);
         return;
       }
 
       if (data.type === "add_contact_confirm") {
+        listeners.current.forEach((fn) => fn(data));
+        return;
+      }
+
+      if (data.type === "search_users_result") {
+        setSearchResults(data.users);
         return;
       }
 
@@ -82,6 +92,48 @@ export default function useWebSocket(userId, userName) {
           ...prev,
           [data.from]: data.typing,
         }));
+        return;
+      }
+
+      if (data.type === "rooms_list") {
+        setRooms(data.rooms);
+        return;
+      }
+
+      if (data.type === "room_created") {
+        setRooms((prev) => {
+          const exists = prev.find((r) => r.id === data.room.id);
+          if (exists) return prev;
+          return [...prev, data.room];
+        });
+        return;
+      }
+
+      if (data.type === "room_joined") {
+        listeners.current.forEach((fn) => fn(data));
+        return;
+      }
+
+      if (data.type === "room_message") {
+        setRoomMessages((prev) => {
+          const roomId = String(data.roomId);
+          const existing = prev[roomId] || [];
+          if (existing.some((m) => m.id === data.id)) return prev;
+          return { ...prev, [roomId]: [...existing, data] };
+        });
+        return;
+      }
+
+      if (data.type === "room_users") {
+        setRoomUsers((prev) => ({
+          ...prev,
+          [data.roomId]: data.users,
+        }));
+        return;
+      }
+
+      if (data.type === "error") {
+        listeners.current.forEach((fn) => fn(data));
         return;
       }
     };
@@ -141,9 +193,59 @@ export default function useWebSocket(userId, userName) {
     }
   }, []);
 
-  const sendAddContact = useCallback((contactId) => {
+  const sendAddContact = useCallback((contactId, contactName) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ type: "add_contact", contactId }));
+      ws.current.send(JSON.stringify({ type: "add_contact", contactId, contactName }));
+    }
+  }, []);
+
+  const searchUsers = useCallback((query) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "search_users", query }));
+    }
+  }, []);
+
+  const getContactAddedEvents = useCallback(() => {
+    return [...contactAddedQueue.current];
+  }, []);
+
+  const clearContactAddedEvents = useCallback(() => {
+    contactAddedQueue.current = [];
+  }, []);
+
+  const createRoom = useCallback((name) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "create_room", name }));
+    }
+  }, []);
+
+  const requestRooms = useCallback(() => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "list_rooms" }));
+    }
+  }, []);
+
+  const joinRoom = useCallback((roomId) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "join_room", roomId }));
+    }
+  }, []);
+
+  const leaveRoom = useCallback((roomId) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "leave_room", roomId }));
+    }
+  }, []);
+
+  const sendRoomMessage = useCallback((roomId, text) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "room_message", roomId, text }));
+    }
+  }, []);
+
+  const requestRoomUsers = useCallback((roomId) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "list_room_users", roomId }));
     }
   }, []);
 
@@ -154,5 +256,5 @@ export default function useWebSocket(userId, userName) {
     };
   }, []);
 
-  return { connected, messages, globalMessages, onlineUsers, allUsers, typingUsers, sendMessage, sendGlobalMessage, sendTyping, requestAllUsers, onMessage, sendAddContact, lastContactAdded, contactAddedCount };
+  return { connected, messages, globalMessages, onlineUsers, allUsers, typingUsers, searchResults, rooms, roomMessages, roomUsers, sendMessage, sendGlobalMessage, sendTyping, requestAllUsers, searchUsers, createRoom, requestRooms, joinRoom, leaveRoom, sendRoomMessage, requestRoomUsers, onMessage, sendAddContact, getContactAddedEvents, clearContactAddedEvents, contactAddedCount };
 }

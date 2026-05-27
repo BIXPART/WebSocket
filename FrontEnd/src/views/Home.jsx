@@ -22,6 +22,14 @@ export default function Home() {
   const [contactName, setContactName] = useState("");
   const [tab, setTab] = useState("conversas");
   const [showAddContact, setShowAddContact] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notification, setNotification] = useState(null);
+  const [showCreateRoom, setShowCreateRoom] = useState(false);
+  const [newRoomName, setNewRoomName] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [roomMessageMode, setRoomMessageMode] = useState("all");
+  const [selectedRecipients, setSelectedRecipients] = useState([]);
+  const [roomMessageInput, setRoomMessageInput] = useState("");
 
   const ws = useWebSocket(user?.id, user?.nome);
 
@@ -39,42 +47,91 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (ws.contactAddedCount === 0 || !user || !ws.lastContactAdded) return;
-    const event = ws.lastContactAdded;
-    const byUserId = Number(event.byUserId);
-    if (byUserId === Number(user.id)) return;
+    if (ws.contactAddedCount === 0 || !user) return;
 
-    const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
-    const existingUser = usuarios.find((u) => Number(u.id) === byUserId);
+    const events = ws.getContactAddedEvents();
+    ws.clearContactAddedEvents();
 
-    if (!existingUser) {
-      usuarios.push({
-        id: byUserId,
-        nome: event.byUserName,
-        email: "",
-        senha: "",
-        contatos: [Number(user.id)],
-      });
-    } else {
-      const idx = usuarios.findIndex((u) => Number(u.id) === byUserId);
-      if (!usuarios[idx].contatos.includes(Number(user.id))) {
-        usuarios[idx].contatos.push(Number(user.id));
+    for (const event of events) {
+      const byUserId = Number(event.byUserId);
+      if (byUserId === Number(user.id)) continue;
+
+      const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
+      const existingUser = usuarios.find((u) => Number(u.id) === byUserId);
+
+      if (!existingUser) {
+        usuarios.push({
+          id: byUserId,
+          nome: event.byUserName,
+          email: "",
+          senha: "",
+          contatos: [Number(user.id)],
+        });
+      } else {
+        const idx = usuarios.findIndex((u) => Number(u.id) === byUserId);
+        if (!usuarios[idx].contatos.includes(Number(user.id))) {
+          usuarios[idx].contatos.push(Number(user.id));
+        }
       }
-    }
 
-    const updatedUser = { ...user, contatos: [...(user.contatos || [])] };
-    if (!updatedUser.contatos.includes(byUserId)) {
-      updatedUser.contatos.push(byUserId);
-    }
+      const updatedUser = { ...user, contatos: [...(user.contatos || [])] };
+      if (!updatedUser.contatos.includes(byUserId)) {
+        updatedUser.contatos.push(byUserId);
+      }
 
-    const userIndex = usuarios.findIndex((u) => Number(u.id) === Number(user.id));
-    if (userIndex !== -1) {
-      usuarios[userIndex] = updatedUser;
-      localStorage.setItem("usuarios", JSON.stringify(usuarios));
+      const userIndex = usuarios.findIndex((u) => Number(u.id) === Number(user.id));
+      if (userIndex !== -1) {
+        usuarios[userIndex] = updatedUser;
+        localStorage.setItem("usuarios", JSON.stringify(usuarios));
+      }
+      localStorage.setItem("token", JSON.stringify(updatedUser));
+      setUser(updatedUser);
     }
-    localStorage.setItem("token", JSON.stringify(updatedUser));
-    setUser(updatedUser);
-  }, [ws.contactAddedCount]);
+  }, [ws.contactAddedCount, user]);
+
+  useEffect(() => {
+    if (!notification) return;
+    const timer = setTimeout(() => setNotification(null), 3000);
+    return () => clearTimeout(timer);
+  }, [notification]);
+
+  useEffect(() => {
+    const unsub = ws.onMessage((data) => {
+      if (data.type === "add_contact_confirm") {
+        setNotification({ message: `${data.contactName} foi adicionado aos contatos!`, type: "success" });
+      }
+    });
+    return unsub;
+  }, [ws.onMessage]);
+
+  useEffect(() => {
+    if (showAddContact && ws.requestAllUsers) {
+      ws.requestAllUsers();
+    }
+  }, [showAddContact]);
+
+  useEffect(() => {
+    if (ws.connected && ws.requestRooms) {
+      ws.requestRooms();
+    }
+  }, [ws.connected]);
+
+  useEffect(() => {
+    if (!selectedRoom) return;
+    ws.joinRoom(selectedRoom.id);
+    ws.requestRoomUsers(selectedRoom.id);
+    const interval = setInterval(() => ws.requestRoomUsers(selectedRoom.id), 5000);
+    return () => clearInterval(interval);
+  }, [selectedRoom]);
+
+  useEffect(() => {
+    const unsub = ws.onMessage((data) => {
+      if (data.type === "error") {
+        setNotification({ message: data.message, type: "error" });
+      }
+    });
+    return unsub;
+  }, [ws.onMessage]);
 
   function handleSelectContact(contato) {
     setContactId(contato.id);
@@ -100,13 +157,25 @@ export default function Home() {
     if (userIndex !== -1) {
       usuarios[userIndex] = updatedUser;
       localStorage.setItem("usuarios", JSON.stringify(usuarios));
+
+      const contactIdx = usuarios.findIndex((u) => Number(u.id) === contactIdNum);
+      if (contactIdx !== -1) {
+        const contactUpdated = { ...usuarios[contactIdx] };
+        if (!contactUpdated.contatos) contactUpdated.contatos = [];
+        if (!contactUpdated.contatos.includes(Number(user.id))) {
+          contactUpdated.contatos.push(Number(user.id));
+        }
+        usuarios[contactIdx] = contactUpdated;
+        localStorage.setItem("usuarios", JSON.stringify(usuarios));
+      }
     }
     localStorage.setItem("token", JSON.stringify(updatedUser));
     setUser(updatedUser);
     setShowAddContact(false);
+    setSearchQuery("");
 
     if (ws.sendAddContact) {
-      ws.sendAddContact(contactIdNum);
+      ws.sendAddContact(contactIdNum, contactUser.name || contactUser.nome);
     }
   }
 
@@ -130,6 +199,14 @@ export default function Home() {
     );
   }, [ws.allUsers, user]);
 
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return allAvailableUsers;
+    const q = searchQuery.toLowerCase().trim();
+    return allAvailableUsers.filter((u) =>
+      (u.name || "").toLowerCase().includes(q)
+    );
+  }, [allAvailableUsers, searchQuery]);
+
   if (!mounted) return null;
 
   if (hasToken && user) {
@@ -148,6 +225,12 @@ export default function Home() {
             onClick={() => { setTab("global"); setContactId(null); }}
           >
             Chat Global
+          </button>
+          <button
+            className={`${styles.tab} ${tab === "salas" ? styles.tabActive : ""}`}
+            onClick={() => { setTab("salas"); setContactId(null); setSelectedRoom(null); }}
+          >
+            Salas
           </button>
         </div>
         <main className={styles.chatMain}>
@@ -195,7 +278,7 @@ export default function Home() {
                 )}
               </div>
             </>
-          ) : (
+          ) : (tab === "global") ? (
             <>
               <div className={styles.globalUserList}>
                 <div className={styles.globalUserHeader}>Usuários Online</div>
@@ -240,21 +323,174 @@ export default function Home() {
                 />
               </div>
             </>
+          ) : (
+            <>
+              <div className={styles.globalUserList}>
+                <div className={styles.globalUserHeader}>
+                  Salas
+                  <button className={styles.addContactSmall} onClick={() => setShowCreateRoom(true)} title="Criar sala">+</button>
+                </div>
+                <ul>
+                  {ws.rooms.map((room) => (
+                    <li key={room.id} className={styles.globalUserItem}>
+                      <div className={styles.globalUserAvatar}>
+                        {room.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className={styles.globalUserInfo}>
+                        <span className={styles.globalUserName}>{room.name}</span>
+                        <span className={styles.globalUserStatus}>{room.memberCount} membro(s)</span>
+                      </div>
+                      <button
+                        className={`${styles.roomJoinBtn} ${selectedRoom?.id === room.id ? styles.roomJoinBtnActive : ""}`}
+                        onClick={() => setSelectedRoom(selectedRoom?.id === room.id ? null : room)}
+                      >
+                        {selectedRoom?.id === room.id ? "Sair" : "Entrar"}
+                      </button>
+                    </li>
+                  ))}
+                  {ws.rooms.length === 0 && (
+                    <li className={styles.emptyState}>Nenhuma sala disponível</li>
+                  )}
+                </ul>
+              </div>
+              <div className={styles.chatPlaceholder}>
+                {!ws.connected && (
+                  <div className={styles.reconnectBanner}>
+                    Reconectando ao servidor...
+                  </div>
+                )}
+                {selectedRoom ? (
+                  <div className={styles.roomChatContainer}>
+                    <div className={styles.chatHeader}>
+                      <div className={styles.chatHeaderInfo}>
+                        <span className={styles.contactName}>{selectedRoom.name}</span>
+                        <span className={styles.modalUserStatus}>
+                          {(ws.roomUsers[selectedRoom.id] || []).filter((u) => u.online).length} online
+                        </span>
+                      </div>
+                      <div className={styles.roomModeToggle}>
+                        <button
+                          className={`${styles.modeBtn} ${roomMessageMode === "all" ? styles.modeBtnActive : ""}`}
+                          onClick={() => setRoomMessageMode("all")}
+                        >
+                          Para todos
+                        </button>
+                        <button
+                          className={`${styles.modeBtn} ${roomMessageMode === "select" ? styles.modeBtnActive : ""}`}
+                          onClick={() => { setRoomMessageMode("select"); setSelectedRecipients([]); }}
+                        >
+                          Selecionar
+                        </button>
+                      </div>
+                    </div>
+                    <div className={styles.roomMembers}>
+                      {(ws.roomUsers[selectedRoom.id] || []).map((u) => (
+                        <div
+                          key={u.id}
+                          className={`${styles.roomMemberItem} ${roomMessageMode === "select" && selectedRecipients.includes(u.id) ? styles.roomMemberSelected : ""}`}
+                          onClick={() => {
+                            if (roomMessageMode !== "select") return;
+                            setSelectedRecipients((prev) =>
+                              prev.includes(u.id)
+                                ? prev.filter((id) => id !== u.id)
+                                : [...prev, u.id]
+                            );
+                          }}
+                        >
+                          <span className={`${styles.roomMemberDot} ${u.online ? styles.online : styles.offline}`} />
+                          <span className={styles.roomMemberName}>{u.name || `User ${u.id}`}</span>
+                          {roomMessageMode === "select" && selectedRecipients.includes(u.id) && (
+                            <span className={styles.roomMemberCheck}>&#10003;</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className={styles.messagesArea}>
+                      {(ws.roomMessages[selectedRoom.id] || []).map((msg, index) => {
+                        const isMine = String(msg.from) === String(user.id);
+                        return (
+                          <div key={msg.id || index} className={`${styles.messageRowRoom} ${isMine ? styles.messageRowSent : styles.messageRowReceived}`}>
+                            <div className={styles.senderInfo}>
+                              <span className={styles.senderName}>{msg.fromName || `User ${msg.from}`}</span>
+                              <span className={styles.messageTime}>{msg.data ? new Date(msg.data).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+                            </div>
+                            <div className={`${styles.messageBubbleRoom} ${isMine ? styles.messageSent : styles.messageReceived}`}>
+                              <span className={styles.messageText}>{msg.text}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {(ws.roomMessages[selectedRoom.id] || []).length === 0 && (
+                        <div className={styles.emptyState}>Nenhuma mensagem na sala</div>
+                      )}
+                    </div>
+                    <form className={styles.inputArea} onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!roomMessageInput.trim()) return;
+                      if (roomMessageMode === "select" && selectedRecipients.length > 0) {
+                        selectedRecipients.forEach((recipientId) => {
+                          ws.sendMessage(recipientId, roomMessageInput.trim());
+                        });
+                        setNotification({ message: `Mensagem enviada para ${selectedRecipients.length} usuário(s)`, type: "success" });
+                      } else {
+                        ws.sendRoomMessage(selectedRoom.id, roomMessageInput.trim());
+                      }
+                      setRoomMessageInput("");
+                      setSelectedRecipients([]);
+                    }}>
+                      <input
+                        type="text"
+                        className={styles.inputField}
+                        value={roomMessageInput}
+                        onChange={(e) => setRoomMessageInput(e.target.value)}
+                        placeholder={roomMessageMode === "all" ? "Enviar para todos na sala..." : "Selecione os destinatários e digite..."}
+                      />
+                      <button type="submit" className={styles.sendButton} disabled={!roomMessageInput.trim()}>
+                        <svg className={styles.sendIcon} viewBox="0 0 24 24">
+                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  <div className={styles.noChat}>
+                    <h2 className={styles.noChatTitle}>Salas</h2>
+                    <p className={styles.noChatText}>
+                      Selecione uma sala para entrar ou crie uma nova
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </main>
 
         {showAddContact && (
-          <div className={styles.modalOverlay} onClick={() => setShowAddContact(false)}>
+          <div className={styles.modalOverlay} onClick={() => { setShowAddContact(false); setSearchQuery(""); }}>
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
               <div className={styles.modalHeader}>
                 <h3>Adicionar Contato</h3>
-                <button className={styles.modalClose} onClick={() => setShowAddContact(false)}>&times;</button>
+                <button className={styles.modalClose} onClick={() => { setShowAddContact(false); setSearchQuery(""); }}>&times;</button>
               </div>
               <div className={styles.modalBody}>
-                {allAvailableUsers.length === 0 && (
-                  <p className={styles.emptyState}>Nenhum usuário disponível</p>
+                <div className={styles.searchContainer}>
+                  <svg className={styles.searchIcon} viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                  </svg>
+                  <input
+                    type="text"
+                    className={styles.searchInput}
+                    placeholder="Buscar por nome..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                {filteredUsers.length === 0 && (
+                  <p className={styles.emptyState}>
+                    {searchQuery.trim() ? "Nenhum usuário encontrado" : "Nenhum usuário disponível"}
+                  </p>
                 )}
-                {allAvailableUsers.map((u) => (
+                {filteredUsers.map((u) => (
                   <div key={u.id} className={styles.modalUserItem}>
                     <div className={styles.modalUserAvatar}>
                       {(u.name || `User ${u.id}`).charAt(0).toUpperCase()}
@@ -272,6 +508,54 @@ export default function Home() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {showCreateRoom && (
+          <div className={styles.modalOverlay} onClick={() => { setShowCreateRoom(false); setNewRoomName(""); }}>
+            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <h3>Criar Sala</h3>
+                <button className={styles.modalClose} onClick={() => { setShowCreateRoom(false); setNewRoomName(""); }}>&times;</button>
+              </div>
+              <div className={styles.modalBody}>
+                <div className={styles.searchContainer}>
+                  <input
+                    type="text"
+                    className={styles.searchInput}
+                    placeholder="Nome da sala..."
+                    value={newRoomName}
+                    onChange={(e) => setNewRoomName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newRoomName.trim()) {
+                        ws.createRoom(newRoomName.trim());
+                        setShowCreateRoom(false);
+                        setNewRoomName("");
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  className={styles.modalAddBtn}
+                  style={{ width: "100%", padding: "0.6rem", marginTop: "0.5rem" }}
+                  onClick={() => {
+                    if (newRoomName.trim()) {
+                      ws.createRoom(newRoomName.trim());
+                      setShowCreateRoom(false);
+                      setNewRoomName("");
+                    }
+                  }}
+                >
+                  Criar Sala
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {notification && (
+          <div className={`${styles.toast} ${notification.type === "success" ? styles.toastSuccess : notification.type === "error" ? styles.toastError : ""}`}>
+            {notification.message}
           </div>
         )}
 
