@@ -14,6 +14,8 @@ export default function useWebSocket(userId, userName) {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [typingUsers, setTypingUsers] = useState({});
+  const [lastContactAdded, setLastContactAdded] = useState(null);
+  const [contactAddedCount, setContactAddedCount] = useState(0);
   const listeners = useRef([]);
   const reconnectTimeout = useRef(null);
   const reconnectAttempt = useRef(0);
@@ -62,6 +64,16 @@ export default function useWebSocket(userId, userName) {
 
       if (data.type === "all_users") {
         setAllUsers(data.users);
+        return;
+      }
+
+      if (data.type === "contact_added") {
+        setLastContactAdded(data);
+        setContactAddedCount((c) => c + 1);
+        return;
+      }
+
+      if (data.type === "add_contact_confirm") {
         return;
       }
 
@@ -129,6 +141,12 @@ export default function useWebSocket(userId, userName) {
     }
   }, []);
 
+  const sendAddContact = useCallback((contactId) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "add_contact", contactId }));
+    }
+  }, []);
+
   const onMessage = useCallback((fn) => {
     listeners.current.push(fn);
     return () => {
@@ -136,5 +154,5 @@ export default function useWebSocket(userId, userName) {
     };
   }, []);
 
-  return { connected, messages, globalMessages, onlineUsers, allUsers, typingUsers, sendMessage, sendGlobalMessage, sendTyping, requestAllUsers, onMessage };
+  return { connected, messages, globalMessages, onlineUsers, allUsers, typingUsers, sendMessage, sendGlobalMessage, sendTyping, requestAllUsers, onMessage, sendAddContact, lastContactAdded, contactAddedCount };
 }

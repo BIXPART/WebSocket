@@ -97,6 +97,35 @@ wss.on("connection", (ws) => {
         return;
       }
 
+      if (type === "add_contact") {
+        const { contactId } = msg;
+        const contactInfo = userRegistry.get(contactId);
+        const userInfo = userRegistry.get(userId);
+
+        const payload = {
+          type: "contact_added",
+          byUserId: userId,
+          byUserName: userInfo ? userInfo.name : `User ${userId}`,
+        };
+
+        const targetWs = users.get(contactId);
+        if (targetWs && targetWs.readyState === 1) {
+          targetWs.send(JSON.stringify(payload));
+        } else {
+          if (!pendentesPorUser.has(contactId)) {
+            pendentesPorUser.set(contactId, []);
+          }
+          pendentesPorUser.get(contactId).push(payload);
+        }
+
+        ws.send(JSON.stringify({
+          type: "add_contact_confirm",
+          contactId,
+          contactName: contactInfo ? contactInfo.name : `User ${contactId}`,
+        }));
+        return;
+      }
+
       if (type === "list_users") {
         const list = Array.from(users.keys()).map((id) => {
           const info = userRegistry.get(id) || { id, name: `User ${id}` };

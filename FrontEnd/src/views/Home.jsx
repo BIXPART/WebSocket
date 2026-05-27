@@ -38,6 +38,44 @@ export default function Home() {
     }
   }, []);
 
+  useEffect(() => {
+    if (ws.contactAddedCount === 0 || !user || !ws.lastContactAdded) return;
+    const event = ws.lastContactAdded;
+    const byUserId = Number(event.byUserId);
+    if (byUserId === Number(user.id)) return;
+
+    const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
+    const existingUser = usuarios.find((u) => Number(u.id) === byUserId);
+
+    if (!existingUser) {
+      usuarios.push({
+        id: byUserId,
+        nome: event.byUserName,
+        email: "",
+        senha: "",
+        contatos: [Number(user.id)],
+      });
+    } else {
+      const idx = usuarios.findIndex((u) => Number(u.id) === byUserId);
+      if (!usuarios[idx].contatos.includes(Number(user.id))) {
+        usuarios[idx].contatos.push(Number(user.id));
+      }
+    }
+
+    const updatedUser = { ...user, contatos: [...(user.contatos || [])] };
+    if (!updatedUser.contatos.includes(byUserId)) {
+      updatedUser.contatos.push(byUserId);
+    }
+
+    const userIndex = usuarios.findIndex((u) => Number(u.id) === Number(user.id));
+    if (userIndex !== -1) {
+      usuarios[userIndex] = updatedUser;
+      localStorage.setItem("usuarios", JSON.stringify(usuarios));
+    }
+    localStorage.setItem("token", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  }, [ws.contactAddedCount]);
+
   function handleSelectContact(contato) {
     setContactId(contato.id);
     setContactName(contato.nome);
@@ -66,6 +104,10 @@ export default function Home() {
     localStorage.setItem("token", JSON.stringify(updatedUser));
     setUser(updatedUser);
     setShowAddContact(false);
+
+    if (ws.sendAddContact) {
+      ws.sendAddContact(contactIdNum);
+    }
   }
 
   const isMyContact = (idu) => user?.contatos?.some((c) => String(c) === String(idu));
