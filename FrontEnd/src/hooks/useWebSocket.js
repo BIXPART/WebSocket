@@ -106,6 +106,7 @@ export default function useWebSocket(userId, userName) {
           if (exists) return prev;
           return [...prev, data.room];
         });
+        listeners.current.forEach((fn) => fn(data));
         return;
       }
 

@@ -561,7 +561,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  align-self: stretch;
+  width: 100%;
+  min-height: 0;
   background: #11181f;
 }
 
@@ -774,5 +776,11 @@
 .chatHeaderInfo {
   display: flex;
   flex-direction: column;
+}
+
+.contactName {
+  font-size: 1.05rem;
+  color: #e9edef;
+  font-weight: 500;
 }
 

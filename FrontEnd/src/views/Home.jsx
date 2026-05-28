@@ -96,15 +96,6 @@ export default function Home() {
   }, [notification]);
 
   useEffect(() => {
-    const unsub = ws.onMessage((data) => {
-      if (data.type === "add_contact_confirm") {
-        setNotification({ message: `${data.contactName} foi adicionado aos contatos!`, type: "success" });
-      }
-    });
-    return unsub;
-  }, [ws.onMessage]);
-
-  useEffect(() => {
     if (showAddContact && ws.requestAllUsers) {
       ws.requestAllUsers();
     }
@@ -121,11 +112,20 @@ export default function Home() {
     ws.joinRoom(selectedRoom.id);
     ws.requestRoomUsers(selectedRoom.id);
     const interval = setInterval(() => ws.requestRoomUsers(selectedRoom.id), 5000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      ws.leaveRoom(selectedRoom.id);
+    };
   }, [selectedRoom]);
 
   useEffect(() => {
     const unsub = ws.onMessage((data) => {
+      if (data.type === "add_contact_confirm") {
+        setNotification({ message: `${data.contactName} foi adicionado aos contatos!`, type: "success" });
+      }
+      if (data.type === "room_created") {
+        setSelectedRoom(data.room);
+      }
       if (data.type === "error") {
         setNotification({ message: data.message, type: "error" });
       }
